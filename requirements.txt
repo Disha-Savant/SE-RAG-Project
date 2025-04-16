@@ -9,3 +9,4 @@ chromadb
 ollama
 sentence-transformers
 PyPDF2
+pytest
