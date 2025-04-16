@@ -2,6 +2,7 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse, HTMLResponse  # Import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
+from fastapi.staticfiles import StaticFiles
 import os
 import shutil
 
@@ -16,7 +17,7 @@ templates = Jinja2Templates(directory="app/templates")
 @app.get("/", response_class=HTMLResponse)
 async def serve_index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
-
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 UPLOAD_DIR = "data"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
