@@ -2,129 +2,404 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RAG Chat</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
     <style>
-        body {
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --user-bubble: #4361ee;
+            --ai-bubble: #f1f5f9;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: "Segoe UI", sans-serif;
-            background: #f0f2f5;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.5;
         }
 
         .container {
             width: 100%;
-            max-width: 800px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+            max-width: 900px;
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             height: 90vh;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card);
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .header-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            border-radius: 8px;
+            color: white;
         }
 
         .chat-box {
             flex: 1;
-            padding: 20px;
+            padding: 24px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
+            gap: 12px;
+            scroll-behavior: smooth;
         }
 
         .message {
-            margin: 10px 0;
             padding: 12px 16px;
-            border-radius: 16px;
-            max-width: 75%;
+            border-radius: 18px;
+            max-width: 85%;
+            font-size: 15px;
+            position: relative;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: messageAppear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
+            animation-delay: 0.1s;
+        }
+
+        @keyframes messageAppear {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .user {
-            background-color: #d1e7ff;
+            background-color: var(--user-bubble);
+            color: white;
             align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            animation-delay: 0.1s;
         }
 
         .ai {
-            background-color: #e4e4e4;
+            background-color: var(--ai-bubble);
+            color: var(--text);
             align-self: flex-start;
+            border-bottom-left-radius: 4px;
         }
 
         .input-area {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             padding: 16px;
-            background: #f9f9f9;
-            border-top: 1px solid #ddd;
-            flex-wrap: wrap;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            position: relative;
+        }
+
+        .input-area::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
         }
 
         input[type="text"] {
             flex: 1;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 16px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            font-size: 15px;
+            background: var(--bg);
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            padding: 12px 16px;
+            background: var(--bg);
+            color: var(--text);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border);
+        }
+
+        .file-label:hover {
+            background: #f1f5f9;
         }
 
         button {
             padding: 12px 20px;
-            background-color: #4a90e2;
+            background-color: var(--primary);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         button:hover {
-            background-color: #357ABD;
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-self: flex-start;
+            padding: 12px 16px;
+            background: var(--ai-bubble);
+            border-radius: 18px;
+            margin-bottom: 4px;
+            border-bottom-left-radius: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-light);
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingAnimation {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+
+        .sources {
+            font-size: 13px;
+            color: var(--text-light);
+            padding: 8px 12px;
+            background: var(--ai-bubble);
+            border-radius: 8px;
+            margin-top: 4px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Scrollbar styling */
+        .chat-box::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-box::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .chat-box::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .container {
+                height: 100vh;
+                border-radius: 0;
+                max-width: 100%;
+            }
+            
+            .header {
+                padding: 16px;
+            }
+            
+            .input-area {
+                flex-direction: column;
+            }
+            
+            button, .file-label {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="header">
+            <h1>Document AI Assistant</h1>
+            <div class="header-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+            </div>
+        </div>
         <div class="chat-box" id="chat-box">
             <!-- Messages appear here -->
         </div>
         <div class="input-area">
+            <label for="file-input" class="file-label">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Upload PDF
+            </label>
             <input type="file" id="file-input" accept=".pdf" />
-            <button onclick="uploadFile()">Upload</button>
             <input type="text" id="query-input" placeholder="Ask your question..." onkeydown="handleKeyPress(event)" />
-            <button onclick="sendQuery()">Send</button>
+            <button onclick="sendQuery()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                Send
+            </button>
         </div>
     </div>
 
     <script>
+        // Initialize chat with welcome message
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                appendMessage("Hello! I'm your Document AI Assistant. Upload a PDF and ask me anything about its content.", "ai");
+            }, 600);
+        });
+
         function appendMessage(text, sender) {
             const chatBox = document.getElementById("chat-box");
             const msg = document.createElement("div");
             msg.classList.add("message", sender);
             msg.innerText = text;
             chatBox.appendChild(msg);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            // Scroll to bottom with smooth behavior
+            chatBox.scrollTo({
+                top: chatBox.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        function showTypingIndicator() {
+            const chatBox = document.getElementById("chat-box");
+            const indicator = document.createElement("div");
+            indicator.className = "typing-indicator";
+            indicator.id = "typing-indicator";
+            indicator.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            chatBox.appendChild(indicator);
+            chatBox.scrollTo({
+                top: chatBox.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById("typing-indicator");
+            if (indicator) {
+                indicator.remove();
+            }
         }
 
         async function uploadFile() {
             const fileInput = document.getElementById("file-input");
             if (!fileInput.files.length) {
-                alert("Please select a PDF to upload.");
+                appendMessage("Please select a PDF to upload first.", "ai");
                 return;
             }
+
+            const fileName = fileInput.files[0].name;
+            appendMessage(`Uploading ${fileName}...`, "ai");
 
             const formData = new FormData();
             formData.append("file", fileInput.files[0]);
 
-            const res = await fetch("/upload/", {
-                method: "POST",
-                body: formData
-            });
+            try {
+                const res = await fetch("/upload/", {
+                    method: "POST",
+                    body: formData
+                });
 
-            if (res.ok) {
-                appendMessage("✅ File uploaded successfully!", "ai");
-            } else {
-                appendMessage("❌ Failed to upload file.", "ai");
+                if (res.ok) {
+                    appendMessage(`✅ ${fileName} uploaded successfully! You can now ask questions about this document.`, "ai");
+                } else {
+                    appendMessage("❌ Failed to upload file. Please try again.", "ai");
+                }
+            } catch (error) {
+                appendMessage("❌ An error occurred during upload. Please check your connection.", "ai");
             }
         }
 
@@ -135,20 +410,33 @@
 
             appendMessage(question, "user");
             queryInput.value = "";
+            
+            // Show typing indicator while waiting for response
+            showTypingIndicator();
 
-            const res = await fetch("/query/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ query: question })
-            });
+            try {
+                const res = await fetch("/query/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ query: question })
+                });
 
-            const data = await res.json();
-            appendMessage(data.response || "No response.", "ai");
+                hideTypingIndicator();
+                
+                const data = await res.json();
+                appendMessage(data.response || "I couldn't find an answer to that question.", "ai");
 
-            if (data.sources && data.sources.length) {
-                appendMessage("📚 Sources: " + data.sources.map(src => src.source).join(", "), "ai");
+                if (data.sources && data.sources.length) {
+                    const sourcesDiv = document.createElement("div");
+                    sourcesDiv.className = "sources";
+                    sourcesDiv.innerHTML = `<strong>📚 Sources:</strong> ${data.sources.map(src => src.source).join(", ")}`;
+                    document.getElementById("chat-box").appendChild(sourcesDiv);
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                appendMessage("❌ Sorry, there was an error processing your request. Please try again.", "ai");
             }
         }
 
@@ -158,6 +446,29 @@
                 sendQuery();
             }
         }
+
+        // Make file input label show the selected filename
+        document.getElementById("file-input").addEventListener("change", function(e) {
+            const label = document.querySelector(".file-label");
+            if (this.files.length) {
+                label.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    ${this.files[0].name}
+                `;
+            } else {
+                label.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Upload PDF
+                `;
+            }
+        });
     </script>
 </body>
 </html>
