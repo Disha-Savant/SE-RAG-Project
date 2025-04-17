@@ -1,0 +1,39 @@
+@startuml
+User
+
+User -> Frontend: Uploads PDF (via /upload)
+Frontend -> FastAPI: POST /upload
+FastAPI -> FileSystem: Save PDF to DATA_PATH
+
+User -> Frontend: Triggers Population (via /populate)
+Frontend -> FastAPI: POST /populate
+
+FastAPI -> DocumentLoader: Load PDFs from DATA_PATH
+DocumentLoader -> PDFParser: Extract metadata
+PDFParser -> DocumentLoader: Return enriched docs
+DocumentLoader -> FastAPI: Return Documents
+
+FastAPI -> TextSplitter: Split Documents
+TextSplitter -> FastAPI: Return Text Chunks
+
+FastAPI -> EmbeddingModel: Get Embeddings (all-MiniLM-L6-v2)
+EmbeddingModel -> FastAPI: Return Embeddings
+
+FastAPI -> ChromaDB: Store Chunks + Embeddings + Metadata
+ChromaDB -> FastAPI: Confirm Persistence
+
+User -> Frontend: Enters Query
+Frontend -> FastAPI: POST /query
+
+FastAPI -> ChromaDB: Query Similar Chunks
+ChromaDB -> FastAPI: Return Top 5 Results with Metadata
+
+FastAPI -> PromptEngine: Construct prompt with context
+PromptEngine -> FastAPI: Return formatted prompt
+
+FastAPI -> OllamaLLM: Generate Response (deepseek-r1)
+OllamaLLM -> FastAPI: Return Answer
+
+FastAPI -> Frontend: Return Response + Sources
+Frontend -> User: Display Results
+@enduml
