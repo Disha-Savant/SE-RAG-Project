@@ -12,6 +12,7 @@ app = FastAPI()
 
 # Initialize Jinja2 Templates
 templates = Jinja2Templates(directory="app/templates")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Serve the index.html page
 @app.get("/", response_class=HTMLResponse)
