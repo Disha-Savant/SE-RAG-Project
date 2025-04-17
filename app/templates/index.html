@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAG Chat</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
+    <title>Document AI Assistant</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
     <style>
         :root {
-            --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --bg: #f8fafc;
+            --primary: #25D366;
+            --primary-dark: #128C7E;
+            --bg: #e5ddd5;
             --card: #ffffff;
-            --user-bubble: #4361ee;
-            --ai-bubble: #f1f5f9;
-            --text: #1e293b;
-            --text-light: #64748b;
-            --border: #e2e8f0;
-            --shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+            --user-bubble: #DCF8C6;
+            --ai-bubble: #ffffff;
+            --text: #111b21;
+            --text-light: #667781;
+            --header-bg: #f0f2f5;
+            --border: #e9edef;
+            --shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
         }
 
         * {
@@ -28,6 +29,7 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg);
+            background-image: url("data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 16c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm0-2c3.314 0 6-2.686 6-6s-2.686-6-6-6-6 2.686-6 6 2.686 6 6 6zm33.414-6l5.95-5.95L45.95.636 40 6.586 34.05.636 32.636 2.05 38.586 8l-5.95 5.95 1.414 1.414L40 9.414l5.95 5.95 1.414-1.414L41.414 8zM40 48c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm0-2c3.314 0 6-2.686 6-6s-2.686-6-6-6-6 2.686-6 6 2.686 6 6 6zM9.414 40l5.95-5.95-1.414-1.414L8 38.586l-5.95-5.95L.636 34.05 6.586 40l-5.95 5.95 1.414 1.414L8 41.414l5.95 5.95 1.414-1.414L9.414 40z' fill='%239C92AC' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
             color: var(--text);
             display: flex;
             justify-content: center;
@@ -39,10 +41,10 @@
 
         .container {
             width: 100%;
-            max-width: 900px;
+            max-width: 1000px;
             background: var(--card);
-            border-radius: 16px;
-            box-shadow: var(--shadow);
+            border-radius: 8px;
+            box-shadow: 0 6px 18px rgba(11, 20, 26, 0.2);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -60,51 +62,76 @@
         }
 
         .header {
-            padding: 18px 24px;
+            padding: 12px 16px;
+            background: var(--header-bg);
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            background: var(--card);
+            gap: 12px;
+        }
+
+        .profile-pic {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            /* Replace with your logo path */
+            background-image: url('/static/assets/logo.png');
+            background-size: cover;
+            background-position: center;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .header-info {
+            flex: 1;
         }
 
         .header h1 {
             font-size: 18px;
             font-weight: 600;
             color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
         }
 
         .header-icon {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--primary);
-            border-radius: 8px;
-            color: white;
+            color: var(--text-light);
+            cursor: pointer;
         }
 
         .chat-box {
             flex: 1;
-            padding: 24px;
+            padding: 16px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
             scroll-behavior: smooth;
+            background-color: var(--bg);
+            background-attachment: fixed;
         }
 
         .message {
-            padding: 12px 16px;
-            border-radius: 18px;
-            max-width: 85%;
-            font-size: 15px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            max-width: 80%;
+            font-size: 16px;
             position: relative;
             opacity: 0;
             transform: translateY(10px);
             animation: messageAppear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
             animation-delay: 0.1s;
+            box-shadow: var(--shadow);
+            line-height: 1.4;
         }
 
         @keyframes messageAppear {
@@ -116,9 +143,10 @@
 
         .user {
             background-color: var(--user-bubble);
-            color: white;
+            color: var(--text);
             align-self: flex-end;
-            border-bottom-right-radius: 4px;
+            border-bottom-right-radius: 0;
+            margin-left: 20%;
             animation-delay: 0.1s;
         }
 
@@ -126,42 +154,34 @@
             background-color: var(--ai-bubble);
             color: var(--text);
             align-self: flex-start;
-            border-bottom-left-radius: 4px;
+            border-bottom-left-radius: 0;
+            margin-right: 20%;
         }
 
         .input-area {
             display: flex;
-            gap: 12px;
-            padding: 16px;
-            background: var(--card);
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--header-bg);
             border-top: 1px solid var(--border);
             position: relative;
-        }
-
-        .input-area::before {
-            content: '';
-            position: absolute;
-            top: -1px;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            align-items: center;
         }
 
         input[type="text"] {
             flex: 1;
             padding: 12px 16px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            font-size: 15px;
-            background: var(--bg);
+            border-radius: 24px;
+            border: none;
+            font-size: 16px;
+            background: var(--card);
             transition: all 0.2s ease;
             outline: none;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.08);
         }
 
         input[type="text"]:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+            box-shadow: 0 0 0 2px var(--primary);
         }
 
         input[type="file"] {
@@ -169,45 +189,42 @@
         }
 
         .file-label {
-            padding: 12px 16px;
-            background: var(--bg);
-            color: var(--text);
-            border-radius: 12px;
+            padding: 12px;
+            background: var(--card);
+            color: var(--text-light);
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
             transition: all 0.2s ease;
-            border: 1px solid var(--border);
         }
 
         .file-label:hover {
-            background: #f1f5f9;
+            background: #e6e6e6;
         }
 
         button {
-            padding: 12px 20px;
+            padding: 12px;
             background-color: var(--primary);
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 50%;
             cursor: pointer;
             font-weight: 500;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
         }
 
         button:hover {
             background-color: var(--primary-dark);
-            transform: translateY(-1px);
+            transform: scale(1.05);
         }
 
         button:active {
-            transform: translateY(0);
+            transform: scale(0.98);
         }
 
         .typing-indicator {
@@ -215,9 +232,11 @@
             align-self: flex-start;
             padding: 12px 16px;
             background: var(--ai-bubble);
-            border-radius: 18px;
+            border-radius: 8px;
             margin-bottom: 4px;
-            border-bottom-left-radius: 4px;
+            border-bottom-left-radius: 0;
+            box-shadow: var(--shadow);
+            margin-right: 20%;
         }
 
         .typing-dot {
@@ -225,7 +244,7 @@
             height: 8px;
             background: var(--text-light);
             border-radius: 50%;
-            margin: 0 2px;
+            margin: 0 3px;
             animation: typingAnimation 1.4s infinite ease-in-out;
         }
 
@@ -239,13 +258,14 @@
         }
 
         .sources {
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-light);
             padding: 8px 12px;
             background: var(--ai-bubble);
             border-radius: 8px;
             margin-top: 4px;
             animation: fadeIn 0.3s ease;
+            box-shadow: var(--shadow);
         }
 
         @keyframes fadeIn {
@@ -255,7 +275,7 @@
 
         /* Scrollbar styling */
         .chat-box::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
 
         .chat-box::-webkit-scrollbar-track {
@@ -263,16 +283,41 @@
         }
 
         .chat-box::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
         }
 
         .chat-box::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+            background: rgba(0,0,0,0.3);
+        }
+
+        /* Date divider */
+        .date-divider {
+            display: flex;
+            align-items: center;
+            margin: 16px 0;
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .date-divider::before,
+        .date-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(0,0,0,0.1);
+        }
+
+        .date-divider span {
+            font-size: 13px;
+            color: var(--text-light);
+            padding: 0 12px;
+            background: var(--bg);
+            border-radius: 14px;
         }
 
         /* Responsive adjustments */
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
             .container {
                 height: 100vh;
                 border-radius: 0;
@@ -280,16 +325,17 @@
             }
             
             .header {
-                padding: 16px;
+                padding: 10px 12px;
             }
             
-            .input-area {
-                flex-direction: column;
+            .profile-pic {
+                width: 40px;
+                height: 40px;
             }
             
-            button, .file-label {
-                width: 100%;
-                justify-content: center;
+            .message {
+                max-width: 85%;
+                font-size: 15px;
             }
         }
     </style>
@@ -297,33 +343,42 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Document AI Assistant</h1>
-            <div class="header-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
+            <div class="profile-pic"></div>
+            <div class="header-info">
+                <h1>Document AI Assistant</h1>
+                <p>Online</p>
+            </div>
+            <div class="header-actions">
+                <div class="header-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="1"></circle>
+                        <circle cx="12" cy="5" r="1"></circle>
+                        <circle cx="12" cy="19" r="1"></circle>
+                    </svg>
+                </div>
             </div>
         </div>
         <div class="chat-box" id="chat-box">
+            <div class="date-divider">
+                <span>Today</span>
+            </div>
             <!-- Messages appear here -->
         </div>
         <div class="input-area">
             <label for="file-input" class="file-label">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="17 8 12 3 7 8"></polyline>
                     <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
-                Upload PDF
             </label>
             <input type="file" id="file-input" accept=".pdf" />
-            <input type="text" id="query-input" placeholder="Ask your question..." onkeydown="handleKeyPress(event)" />
+            <input type="text" id="query-input" placeholder="Type a message..." onkeydown="handleKeyPress(event)" />
             <button onclick="sendQuery()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
-                Send
             </button>
         </div>
     </div>
@@ -333,7 +388,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 appendMessage("Hello! I'm your Document AI Assistant. Upload a PDF and ask me anything about its content.", "ai");
-            }, 600);
+            }, 800);
         });
 
         function appendMessage(text, sender) {
@@ -382,23 +437,26 @@
             }
 
             const fileName = fileInput.files[0].name;
-            appendMessage(`Uploading ${fileName}...`, "ai");
+            appendMessage(`Uploading ${fileName}...`, "user");
 
             const formData = new FormData();
             formData.append("file", fileInput.files[0]);
 
             try {
+                showTypingIndicator();
                 const res = await fetch("/upload/", {
                     method: "POST",
                     body: formData
                 });
 
+                hideTypingIndicator();
                 if (res.ok) {
                     appendMessage(`✅ ${fileName} uploaded successfully! You can now ask questions about this document.`, "ai");
                 } else {
                     appendMessage("❌ Failed to upload file. Please try again.", "ai");
                 }
             } catch (error) {
+                hideTypingIndicator();
                 appendMessage("❌ An error occurred during upload. Please check your connection.", "ai");
             }
         }
@@ -449,24 +507,8 @@
 
         // Make file input label show the selected filename
         document.getElementById("file-input").addEventListener("change", function(e) {
-            const label = document.querySelector(".file-label");
             if (this.files.length) {
-                label.innerHTML = `
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                    </svg>
-                    ${this.files[0].name}
-                `;
-            } else {
-                label.innerHTML = `
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
-                    Upload PDF
-                `;
+                uploadFile();
             }
         });
     </script>
