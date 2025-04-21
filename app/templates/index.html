@@ -75,7 +75,6 @@
             height: 48px;
             border-radius: 50%;
             object-fit: cover;
-            /* Replace with your logo path */
             background-image: url('/static/assets/logo.png');
             background-size: cover;
             background-position: center;
@@ -273,7 +272,21 @@
             to { opacity: 1; }
         }
 
-        /* Scrollbar styling */
+        .progress-container {
+            width: 100%;
+            background-color: #f1f1f1;
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
         .chat-box::-webkit-scrollbar {
             width: 8px;
         }
@@ -291,7 +304,6 @@
             background: rgba(0,0,0,0.3);
         }
 
-        /* Date divider */
         .date-divider {
             display: flex;
             align-items: center;
@@ -316,7 +328,6 @@
             border-radius: 14px;
         }
 
-        /* Responsive adjustments */
         @media (max-width: 768px) {
             .container {
                 height: 100vh;
@@ -362,7 +373,6 @@
             <div class="date-divider">
                 <span>Today</span>
             </div>
-            <!-- Messages appear here -->
         </div>
         <div class="input-area">
             <label for="file-input" class="file-label">
@@ -391,11 +401,16 @@
             }, 800);
         });
 
-        function appendMessage(text, sender) {
+        function appendMessage(text, sender, options = {}) {
             const chatBox = document.getElementById("chat-box");
             const msg = document.createElement("div");
             msg.classList.add("message", sender);
-            msg.innerText = text;
+            
+            if (options.progressId) {
+                msg.id = options.progressId;
+            }
+            
+            msg.innerHTML = text;
             chatBox.appendChild(msg);
             
             // Scroll to bottom with smooth behavior
@@ -403,6 +418,8 @@
                 top: chatBox.scrollHeight,
                 behavior: 'smooth'
             });
+            
+            return msg;
         }
 
         function showTypingIndicator() {
@@ -436,28 +453,54 @@
                 return;
             }
 
-            const fileName = fileInput.files[0].name;
+            const file = fileInput.files[0];
+            const fileName = file.name;
             appendMessage(`Uploading ${fileName}...`, "user");
 
-            const formData = new FormData();
-            formData.append("file", fileInput.files[0]);
-
             try {
-                showTypingIndicator();
-                const res = await fetch("/upload/", {
+                // Show processing message with progress dots
+                const processingMsg = appendMessage("Processing document...", "ai", { progressId: "processing-msg" });
+                let dotCount = 0;
+                const dotInterval = setInterval(() => {
+                    dotCount = (dotCount + 1) % 4;
+                    processingMsg.textContent = "Processing document" + ".".repeat(dotCount);
+                }, 500);
+
+                // Upload the file
+                const formData = new FormData();
+                formData.append("file", file);
+                const uploadRes = await fetch("/upload/", {
                     method: "POST",
                     body: formData
                 });
 
-                hideTypingIndicator();
-                if (res.ok) {
-                    appendMessage(`✅ ${fileName} uploaded successfully! You can now ask questions about this document.`, "ai");
-                } else {
-                    appendMessage("❌ Failed to upload file. Please try again.", "ai");
+                if (!uploadRes.ok) {
+                    clearInterval(dotInterval);
+                    processingMsg.textContent = "❌ Upload failed";
+                    return;
                 }
+
+                // Process the document (populate vector store)
+                const populateRes = await fetch("/populate/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ reset: true }) // Reset to include new file
+                });
+
+                clearInterval(dotInterval);
+                
+                if (populateRes.ok) {
+                    processingMsg.textContent = "✅ Document processed and ready for queries!";
+                } else {
+                    processingMsg.textContent = "❌ Processing failed";
+                }
+                
             } catch (error) {
-                hideTypingIndicator();
-                appendMessage("❌ An error occurred during upload. Please check your connection.", "ai");
+                appendMessage("❌ An error occurred: " + error.message, "ai");
+            } finally {
+                fileInput.value = ""; // Clear the file input
             }
         }
 
@@ -469,7 +512,6 @@
             appendMessage(question, "user");
             queryInput.value = "";
             
-            // Show typing indicator while waiting for response
             showTypingIndicator();
 
             try {
@@ -505,12 +547,8 @@
             }
         }
 
-        // Make file input label show the selected filename
-        document.getElementById("file-input").addEventListener("change", function(e) {
-            if (this.files.length) {
-                uploadFile();
-            }
-        });
+        // Automatically trigger upload and processing when file is selected
+        document.getElementById("file-input").addEventListener("change", uploadFile);
     </script>
 </body>
 </html>
