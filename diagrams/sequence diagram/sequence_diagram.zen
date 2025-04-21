@@ -5,10 +5,7 @@ User -> Frontend: Uploads PDF (via /upload)
 Frontend -> FastAPI: POST /upload
 FastAPI -> FileSystem: Save PDF to DATA_PATH
 
-User -> Frontend: Triggers Population (via /populate)
-Frontend -> FastAPI: POST /populate
-
-FastAPI -> DocumentLoader: Load PDFs from DATA_PATH
+FastAPI -> DocumentLoader: Auto-load PDFs from DATA_PATH
 DocumentLoader -> PDFParser: Extract metadata
 PDFParser -> DocumentLoader: Return enriched docs
 DocumentLoader -> FastAPI: Return Documents
