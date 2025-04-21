@@ -1,0 +1,84 @@
+@startuml
+!theme plain
+left to right direction
+
+skinparam componentSpacing 30
+skinparam packageStyle rectangle
+
+package "Backend" {
+
+  package "API Layer (FastAPI)" as FastAPI {
+    component "Upload PDF Endpoint" as UploadEndpoint
+    component "Populate DB Endpoint" as PopulateEndpoint
+    component "Query Endpoint" as QueryEndpoint
+  }
+
+  package "Data Processing" as DataProcessing {
+    component "PDF Loader" as PDFLoader
+    component "Text Splitter" as TextSplitter
+    component "Metadata Extractor" as MetadataExtractor
+    component "Chunk ID Generator" as ChunkIDGen
+  }
+
+  package "Vector Database Management" as VectorDBManagement {
+    component "Chroma Interface" as ChromaInt
+    component "Embedding Function Handler" as EmbeddingHandler
+  }
+
+  package "Retrieval and Generation (RAG)" as RAGLogic {
+    component "Query Encoder" as QueryEncoder
+    component "Vector Search" as VectorSearch
+    component "Prompt Builder" as PromptBuilder
+    component "LLM Invoker (Ollama)" as LLMInvoker
+  }
+
+  component "Configuration" as Config
+  component "Data Storage" as DataStorage
+  database "Chroma Database (chroma)" as ChromaDB
+
+  package "Embedding Model" {
+    component "HuggingFace Embeddings" as HFEmbeddings
+  }
+
+  package "LLM" {
+    component "Ollama Server" as OllamaServer
+    component "deepseek-r1:1.5b Model" as DeepSeekModel
+  }
+}
+
+' API Layer Connections
+FastAPI --> UploadEndpoint
+FastAPI --> PopulateEndpoint
+FastAPI --> QueryEndpoint
+
+' Data Processing Connections
+FastAPI --> DataProcessing
+DataProcessing --> PDFLoader
+DataProcessing --> TextSplitter
+DataProcessing --> MetadataExtractor
+DataProcessing --> ChunkIDGen
+DataProcessing --> VectorDBManagement : Uses Embedding
+UploadEndpoint --> DataStorage : Writes to
+PDFLoader --> DataStorage : Reads from
+
+' Vector DB Management
+DataProcessing --> VectorDBManagement
+VectorDBManagement --> ChromaInt
+VectorDBManagement --> EmbeddingHandler
+EmbeddingHandler --> HFEmbeddings
+ChromaInt --> ChromaDB : Stores/Retrieves
+VectorDBManagement --> ChromaDB : Manages
+
+' RAG Logic
+FastAPI --> RAGLogic
+RAGLogic --> VectorDBManagement : Queries
+RAGLogic --> LLMInvoker
+RAGLogic --> EmbeddingHandler : For Query Encoding
+LLMInvoker --> OllamaServer
+OllamaServer --> DeepSeekModel
+
+' Config connections
+FastAPI --> Config : Uses
+DataProcessing --> Config : Uses paths
+VectorDBManagement --> Config : Uses paths
+@enduml
