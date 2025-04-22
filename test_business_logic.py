@@ -91,7 +91,7 @@ class TestRAGFunction(unittest.TestCase):
             DummyChroma.return_value = dummy_db_instance
 
             # Patch the Ollama model so that it returns a dummy answer.
-            with patch("rag.Ollama") as DummyOllama:
+            with patch("app.rag.Ollama") as DummyOllama:
                 dummy_llm_instance = MagicMock()
                 dummy_llm_instance.invoke.return_value = "Dummy answer from LLM."
                 DummyOllama.return_value = dummy_llm_instance
